@@ -1,55 +1,118 @@
 const http = require('http')
 const fs = require('fs')
-
+const { serialize, deserialize } = require("./serializers/custom");
 const port = 4000;
 
-const users = [];
+//const users = [];
 
 
 const server = http.createServer((req, res) => {
 
-    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Content-Type", "text/plain");
 
+    if (req.method == "GET" && req.url == "/") {
+        try {
+            res.statusCode = 200;
+            res.end("API's home page")
+        } catch (err) {
+            console.log(err);
+        }
+    }
 
     if (req.method == "POST" && req.url == "/user") {
         let body = "";
 
         req.on("data", (chunk) => {
             body += chunk;
-            console.log(chunk)
+            console.log("chunck data : ",chunk)
+            console.log("whole data",body)
         })
 
         req.on("end", () => {
             try {
+                const user = deserialize(body);
+                console.log(user)
 
-                const database = fs.readFileSync("./storage/db.json","utf-8");
-                console.log(body)
-                const user = JSON.parse(body);
+                const database = fs.readFileSync("./storage/db.json", "utf8");
+
+                const users = JSON.parse(database);
 
                 users.push(user);
+
+                fs.writeFileSync(
+                    "./storage/db.json",
+                    JSON.stringify(users, null, 2)
+                );
                 console.log(users);
 
-                res.statusCode = 200;
+                const data = serialize(user)
+                console.log(data);
+
+                res.setHeader("Content-Type", "text/plain");
+
+                res.statusCode = 201;
+                res.setHeader("Content-Type", "application/json");
 
                 res.end(
                     JSON.stringify({
-                        success: true,
-                        message: "User received"
+                        serialized: data,
+                        deserialized: user
                     })
                 );
             }
             catch (err) {
-                console.log(err);
-
                 res.statusCode = 400;
+
                 res.end(
                     JSON.stringify({
                         success: false,
-                        message: "Invalid JSON"
+                        message: err.message
                     })
                 );
             }
         })
+    }
+
+    if (req.method === "POST" && req.url === "/custom-user") {
+
+        let body = "";
+
+        req.on("data", (chunk) => {
+            body += chunk.toString();
+        });
+
+        req.on("end", () => {
+
+            try {
+
+                const user = deserialize(body);
+
+                console.log(user);
+
+                res.statusCode = 201;
+
+                res.end(
+                    JSON.stringify({
+                        success: true,
+                        user
+                    })
+                );
+
+            } catch (err) {
+
+                res.statusCode = 400;
+
+                res.end(
+                    JSON.stringify({
+                        success: false,
+                        message: err.message
+                    })
+                );
+
+            }
+
+        });
+
     }
 });
 
