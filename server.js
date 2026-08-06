@@ -8,7 +8,7 @@ const port = 4000;
 
 const server = http.createServer((req, res) => {
 
-    res.setHeader("Content-Type", "text/plain");
+    //res.setHeader("Content-Type", "text/plain");
 
     if (req.method == "GET" && req.url == "/") {
         try {
@@ -24,14 +24,14 @@ const server = http.createServer((req, res) => {
 
         req.on("data", (chunk) => {
             body += chunk;
-            console.log("chunck data : ",chunk)
-            console.log("whole data",body)
+            console.log("\nchunck data : ",chunk)
+            console.log("\nwhole data : ",body)
         })
 
         req.on("end", () => {
             try {
                 const user = deserialize(body);
-                console.log(user)
+                console.log("\nAfter deserialize : ",user)
 
                 const database = fs.readFileSync("./storage/db.json", "utf8");
 
@@ -41,14 +41,15 @@ const server = http.createServer((req, res) => {
 
                 fs.writeFileSync(
                     "./storage/db.json",
+                    
                     JSON.stringify(users, null, 2)
                 );
-                console.log(users);
+                console.log("\n",users);
 
                 const data = serialize(user)
-                console.log(data);
+                console.log("\nAfter serialize : ",data);
 
-                res.setHeader("Content-Type", "text/plain");
+                //res.setHeader("Content-Type", "text/plain");
 
                 res.statusCode = 201;
                 res.setHeader("Content-Type", "application/json");
