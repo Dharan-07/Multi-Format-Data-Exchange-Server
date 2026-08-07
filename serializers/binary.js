@@ -1,17 +1,15 @@
-const { serialize, deserialize } = require('./custom')
+const { serialize, deserialize } = require("./custom");
 
 function serializeBinary(user) {
-
-    const text = serialize(user);
-    return Buffer.from(text);
-
+    const text = serialize(user);      // "Dharan|21"\
+    console.log(text)
+    return Buffer.from(text, "utf8");  // Buffer
 }
 
 function deserializeBinary(buffer) {
-
-    const text = buffer.toString();
+    const text = buffer.toString("utf8");
+    console.log(text)
     return deserialize(text);
-
 }
 
 module.exports = {

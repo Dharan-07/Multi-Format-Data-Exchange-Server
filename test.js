@@ -1,14 +1,38 @@
-const { serialize, deserialize } = require("./serializers/custom");
+const {
+    serializeBinary,
+    deserializeBinary
+} = require("./serializers/binary");
 
 const user = {
-    name: "Alice",
-    age: 22
+
+    name: "Dharan",
+
+    age: 21
+
 };
 
-const serialized = serialize(user);
+const buffer = serializeBinary(user);
 
-console.log(serialized);
+console.log(buffer);
 
-const deserialized = deserialize(serialized);
+const result = deserializeBinary(buffer);
 
-console.log(deserialized);
+console.log(result);
+
+//----------------------------------------------------------------------
+
+// const text = "Dharan|21";
+
+// const buffer = Buffer.from(text);
+
+// console.log(buffer);
+
+// console.log(buffer.length);
+
+// console.log(buffer.toString());
+
+// console.log(buffer[0]);
+
+// console.log(buffer[1]);
+
+// console.log(buffer[2]);
