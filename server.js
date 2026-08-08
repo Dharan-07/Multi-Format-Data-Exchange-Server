@@ -4,32 +4,61 @@ const handleUserRoute = require("./routes/userRoute");
 
 const port = 4000;
 
+
 const server = http.createServer((req, res) => {
 
-    if (req.method === "GET" && req.url === "/") {
+    // Home route
+    if (
+        req.method === "GET" &&
+        req.url === "/"
+    ) {
 
         res.statusCode = 200;
+
+        res.setHeader(
+            "Content-Type",
+            "text/plain"
+        );
 
         res.end("API Running");
 
         return;
-
     }
 
-    if (req.method === "POST" && req.url === "/user") {
+
+    // User route
+    if (
+        req.method === "POST" &&
+        req.url === "/user"
+    ) {
 
         return handleUserRoute(req, res);
 
     }
 
+
+    // Route not found
     res.statusCode = 404;
 
-    res.end("Route Not Found");
+    res.setHeader(
+        "Content-Type",
+        "application/json"
+    );
+
+    res.end(
+        JSON.stringify({
+            success: false,
+            message: "Route Not Found"
+        })
+    );
 
 });
 
+
 server.listen(port, () => {
 
-    console.log(`Server running on http://localhost:${port}`);
+    console.log(
+        `Server running on http://localhost:${port}`
+    );
 
 });

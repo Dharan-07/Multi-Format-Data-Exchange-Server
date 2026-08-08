@@ -1,71 +1,111 @@
 const getRequestBody = require("../utils/bodyParser");
 
-const { serialize, deserialize } = require("../serializers/custom");
+const { getSerializer } = require("../serializers");
 
 const { saveUser } = require("../services/userService");
+
 
 async function handleUserRoute(req, res) {
 
     try {
 
+        // --------------------------------
+        // 1. Read Content-Type
+        // --------------------------------
+
+        const contentType = req.headers["content-type"];
+
+        console.log("\nContent-Type:", contentType);
+
+
+        // --------------------------------
+        // 2. Find serializer
+        // --------------------------------
+
+        const serializer = getSerializer(contentType);
+
+
+        // --------------------------------
+        // 3. Read request body
+        // --------------------------------
+
         const buffer = await getRequestBody(req);
 
-        console.log("\nBuffer:", buffer);
+        console.log("Received Buffer:", buffer);
 
-        const text = buffer.toString();
 
-        console.log("\nText:", text);
+        // --------------------------------
+        // 4. Deserialize
+        // --------------------------------
 
-        const user = deserialize(text);
+        const user = serializer.deserialize(buffer);
 
-        console.log("\nObject:", user);
+        console.log("Deserialized User:", user);
+
+
+        // --------------------------------
+        // 5. Business logic
+        // --------------------------------
 
         saveUser(user);
 
-        const serialized = serialize(user);
 
-        console.log("\nSerialized:", serialized);
+        // --------------------------------
+        // 6. Serialize response
+        // --------------------------------
+
+        const serialized = serializer.serialize(user);
+
+
+        console.log("Serialized Response:", serialized);
+
+
+        // --------------------------------
+        // 7. Send response
+        // --------------------------------
 
         res.statusCode = 201;
 
-        res.setHeader("Content-Type", "application/json");
-
-        res.end(
-
-            JSON.stringify({
-
-                success: true,
-
-                serialized,
-
-                user
-
-            })
-
+        res.setHeader(
+            "Content-Type",
+            contentType
         );
+
+
+        if (contentType === "application/json") {
+
+            res.end(serialized);
+
+        }
+        else {
+
+            res.end(serialized);
+
+        }
 
     }
 
     catch (err) {
 
+        console.log(err);
+
         res.statusCode = 400;
 
-        res.setHeader("Content-Type", "application/json");
+        res.setHeader(
+            "Content-Type",
+            "application/json"
+        );
 
         res.end(
-
             JSON.stringify({
-
                 success: false,
-
                 message: err.message
-
             })
-
         );
 
     }
 
 }
+
 
 module.exports = handleUserRoute;
