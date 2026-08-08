@@ -1,9 +1,6 @@
 function serialize(user) {
-
-    return `${user.name}|${user.age}`;
-
+    return Buffer.from(`${user.name}|${user.age}`);
 }
-
 
 function deserialize(buffer) {
 
@@ -11,17 +8,11 @@ function deserialize(buffer) {
 
     const [name, age] = data.split("|");
 
-    if (!name || !age) {
-        throw new Error("Invalid custom format");
-    }
-
     return {
         name,
         age: Number(age)
     };
-
 }
-
 
 module.exports = {
     serialize,

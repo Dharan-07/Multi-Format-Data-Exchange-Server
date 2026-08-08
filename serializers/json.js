@@ -1,18 +1,10 @@
 function serialize(user) {
-
-    return JSON.stringify(user);
-
+    return Buffer.from(JSON.stringify(user));
 }
-
 
 function deserialize(buffer) {
-
-    const data = buffer.toString();
-
-    return JSON.parse(data);
-
+    return JSON.parse(buffer.toString());
 }
-
 
 module.exports = {
     serialize,
