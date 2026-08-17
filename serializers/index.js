@@ -1,12 +1,15 @@
 const jsonSerializer = require("./json");
 const customSerializer = require("./custom");
+const protobufSerializer = require("./protobuf");
 
 
 const serializers = {
 
     "application/json": jsonSerializer,
 
-    "text/plain": customSerializer
+    "text/plain": customSerializer,
+
+    "application/x-protobuf": protobufSerializer
 
 };
 
@@ -24,7 +27,6 @@ function getSerializer(contentType) {
     }
 
     return serializer;
-
 }
 
 
