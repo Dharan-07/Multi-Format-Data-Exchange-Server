@@ -24,6 +24,9 @@ async function handleUserRoute(req, res) {
 
         const serializer = getSerializer(contentType);
 
+        console.log("\nSelected serializer:");
+        console.log(serializer);
+
 
         // --------------------------------
         // 3. Read request body
@@ -72,16 +75,7 @@ async function handleUserRoute(req, res) {
         );
 
 
-        if (contentType === "application/json") {
-
-            res.end(serialized);
-
-        }
-        else {
-
-            res.end(serialized);
-
-        }
+        res.end(serialized);
 
     }
 
