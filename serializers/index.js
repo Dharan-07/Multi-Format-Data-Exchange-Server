@@ -1,6 +1,7 @@
 const jsonSerializer = require("./json");
 const customSerializer = require("./custom");
 const protobufSerializer = require("./protobuf");
+const avroSerializer = require("./avro");
 
 
 const serializers = {
@@ -9,7 +10,9 @@ const serializers = {
 
     "text/plain": customSerializer,
 
-    "application/x-protobuf": protobufSerializer
+    "application/x-protobuf": protobufSerializer,
+
+    "application/avro": avroSerializer
 
 };
 
