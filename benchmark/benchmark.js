@@ -4,11 +4,109 @@ const json = require("../serializers/json");
 const protobuf = require("../serializers/protobuf");
 const avro = require("../serializers/avro");
 
-
 const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
 });
+
+const ITERATIONS = 10000;
+
+
+function measureSerialization(serializer, user) {
+
+    // Warm-up
+    for (let i = 0; i < 1000; i++) {
+        serializer.serialize(user);
+    }
+
+    const start = process.hrtime.bigint();
+
+    let buffer;
+
+    for (let i = 0; i < ITERATIONS; i++) {
+        buffer = serializer.serialize(user);
+    }
+
+    const end = process.hrtime.bigint();
+
+    const totalTime =
+        Number(end - start) / 1_000_000;
+
+    const averageTime =
+        totalTime / ITERATIONS;
+
+    return {
+        buffer,
+        totalTime,
+        averageTime
+    };
+}
+
+
+function measureDeserialization(serializer, buffer) {
+
+    // Warm-up
+    for (let i = 0; i < 1000; i++) {
+        serializer.deserialize(buffer);
+    }
+
+    const start = process.hrtime.bigint();
+
+    for (let i = 0; i < ITERATIONS; i++) {
+        serializer.deserialize(buffer);
+    }
+
+    const end = process.hrtime.bigint();
+
+    const totalTime =
+        Number(end - start) / 1_000_000;
+
+    const averageTime =
+        totalTime / ITERATIONS;
+
+    return {
+        totalTime,
+        averageTime
+    };
+}
+
+
+function printResult(name, serialization, deserialization) {
+
+    console.log("\n----------------------------------------");
+    console.log(name);
+    console.log("----------------------------------------");
+
+    console.log(
+        "Payload Size       :",
+        serialization.buffer.length,
+        "bytes"
+    );
+
+    console.log(
+        "Serialize Total    :",
+        serialization.totalTime.toFixed(4),
+        "ms"
+    );
+
+    console.log(
+        "Serialize Average  :",
+        serialization.averageTime.toFixed(6),
+        "ms"
+    );
+
+    console.log(
+        "Deserialize Total  :",
+        deserialization.totalTime.toFixed(4),
+        "ms"
+    );
+
+    console.log(
+        "Deserialize Average:",
+        deserialization.averageTime.toFixed(6),
+        "ms"
+    );
+}
 
 
 rl.question("Enter name: ", (name) => {
@@ -21,233 +119,96 @@ rl.question("Enter name: ", (name) => {
         };
 
 
-        console.log("\n================================");
-        console.log("User");
-        console.log("================================");
+        console.log("\n========================================");
+        console.log("        SERIALIZATION BENCHMARK");
+        console.log("========================================");
 
+        console.log("\nUser:");
         console.log(user);
 
+        console.log(
+            "\nIterations:",
+            ITERATIONS
+        );
 
-        // =================================
+
+        // ========================================
         // JSON
-        // =================================
+        // ========================================
 
-        console.log("\n================================");
-        console.log("JSON");
-        console.log("================================");
+        const jsonSerialization =
+            measureSerialization(
+                json,
+                user
+            );
 
-
-        const jsonStart =
-            process.hrtime.bigint();
-
-        const jsonData =
-            json.serialize(user);
-
-        const jsonBuffer =
-            Buffer.from(jsonData);
-
-        const jsonEnd =
-            process.hrtime.bigint();
+        const jsonDeserialization =
+            measureDeserialization(
+                json,
+                jsonSerialization.buffer
+            );
 
 
-        const jsonSerializeTime =
-            Number(jsonEnd - jsonStart) / 1_000_000;
-
-
-        console.log(
-            "Payload Size:",
-            jsonBuffer.length,
-            "bytes"
-        );
-
-        console.log(
-            "Serialize Time:",
-            jsonSerializeTime,
-            "ms"
-        );
-
-
-        // JSON Deserialize
-
-        const jsonDeserializeStart =
-            process.hrtime.bigint();
-
-        const jsonUser =
-            json.deserialize(jsonBuffer);
-
-        const jsonDeserializeEnd =
-            process.hrtime.bigint();
-
-
-        const jsonDeserializeTime =
-            Number(
-                jsonDeserializeEnd -
-                jsonDeserializeStart
-            ) / 1_000_000;
-
-
-        console.log(
-            "Deserialize Time:",
-            jsonDeserializeTime,
-            "ms"
-        );
-
-
-        // =================================
+        // ========================================
         // PROTOBUF
-        // =================================
+        // ========================================
 
-        console.log("\n================================");
-        console.log("PROTOBUF");
-        console.log("================================");
+        const protobufSerialization =
+            measureSerialization(
+                protobuf,
+                user
+            );
 
-
-        const protobufSerializeStart =
-            process.hrtime.bigint();
-
-        const protobufBuffer =
-            protobuf.serialize(user);
-
-        const protobufSerializeEnd =
-            process.hrtime.bigint();
+        const protobufDeserialization =
+            measureDeserialization(
+                protobuf,
+                protobufSerialization.buffer
+            );
 
 
-        const protobufSerializeTime =
-            Number(
-                protobufSerializeEnd -
-                protobufSerializeStart
-            ) / 1_000_000;
-
-
-        console.log(
-            "Payload Size:",
-            protobufBuffer.length,
-            "bytes"
-        );
-
-        console.log(
-            "Serialize Time:",
-            protobufSerializeTime,
-            "ms"
-        );
-
-
-        // Protobuf Deserialize
-
-        const protobufDeserializeStart =
-            process.hrtime.bigint();
-
-        const protobufUser =
-            protobuf.deserialize(protobufBuffer);
-
-        const protobufDeserializeEnd =
-            process.hrtime.bigint();
-
-
-        const protobufDeserializeTime =
-            Number(
-                protobufDeserializeEnd -
-                protobufDeserializeStart
-            ) / 1_000_000;
-
-
-        console.log(
-            "Deserialize Time:",
-            protobufDeserializeTime,
-            "ms"
-        );
-
-
-        // =================================
+        // ========================================
         // AVRO
-        // =================================
+        // ========================================
 
-        console.log("\n================================");
-        console.log("AVRO");
-        console.log("================================");
+        const avroSerialization =
+            measureSerialization(
+                avro,
+                user
+            );
 
-
-        const avroSerializeStart =
-            process.hrtime.bigint();
-
-        const avroBuffer =
-            avro.serialize(user);
-
-        const avroSerializeEnd =
-            process.hrtime.bigint();
+        const avroDeserialization =
+            measureDeserialization(
+                avro,
+                avroSerialization.buffer
+            );
 
 
-        const avroSerializeTime =
-            Number(
-                avroSerializeEnd -
-                avroSerializeStart
-            ) / 1_000_000;
+        // ========================================
+        // RESULTS
+        // ========================================
 
-
-        console.log(
-            "Payload Size:",
-            avroBuffer.length,
-            "bytes"
+        printResult(
+            "JSON",
+            jsonSerialization,
+            jsonDeserialization
         );
 
-        console.log(
-            "Serialize Time:",
-            avroSerializeTime,
-            "ms"
+        printResult(
+            "PROTOBUF",
+            protobufSerialization,
+            protobufDeserialization
         );
 
-
-        // Avro Deserialize
-
-        const avroDeserializeStart =
-            process.hrtime.bigint();
-
-        const avroUser =
-            avro.deserialize(avroBuffer);
-
-        const avroDeserializeEnd =
-            process.hrtime.bigint();
-
-
-        const avroDeserializeTime =
-            Number(
-                avroDeserializeEnd -
-                avroDeserializeStart
-            ) / 1_000_000;
-
-
-        console.log(
-            "Deserialize Time:",
-            avroDeserializeTime,
-            "ms"
+        printResult(
+            "AVRO",
+            avroSerialization,
+            avroDeserialization
         );
 
 
-        // =================================
-        // RESULT
-        // =================================
-
-        console.log("\n================================");
-        console.log("BENCHMARK RESULT");
-        console.log("================================");
-
-        console.log(
-            "\nJSON:",
-            jsonBuffer.length,
-            "bytes"
-        );
-
-        console.log(
-            "Protobuf:",
-            protobufBuffer.length,
-            "bytes"
-        );
-
-        console.log(
-            "Avro:",
-            avroBuffer.length,
-            "bytes"
-        );
+        console.log("\n========================================");
+        console.log("Benchmark completed");
+        console.log("========================================");
 
 
         rl.close();
