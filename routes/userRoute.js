@@ -4,6 +4,8 @@ const { getSerializer } = require("../serializers");
 
 const { saveUser } = require("../services/userService");
 
+const { compress, decompress } = require("../utils/compression");
+
 
 async function handleUserRoute(req, res) {
 
@@ -14,6 +16,7 @@ async function handleUserRoute(req, res) {
         // --------------------------------
 
         const contentType = req.headers["content-type"];
+        const contentEncoding = req.headers["content-encoding"];
 
         console.log("\nContent-Type:", contentType);
 
@@ -36,12 +39,23 @@ async function handleUserRoute(req, res) {
 
         console.log("Received Buffer:", buffer);
 
+        let dataBuffer = buffer;
+
+        if (contentEncoding === "gzip") {
+
+            dataBuffer = decompress(buffer);
+
+            console.log("Decompressed Buffer:");
+            console.log(dataBuffer);
+
+        }
+
 
         // --------------------------------
         // 4. Deserialize
         // --------------------------------
 
-        const user = serializer.deserialize(buffer);
+        const user = serializer.deserialize(dataBuffer);
 
         console.log("Deserialized User:", user);
 
@@ -59,6 +73,8 @@ async function handleUserRoute(req, res) {
 
         const serialized = serializer.serialize(user);
 
+        const compressedResponse = compress(serialized);
+
 
         console.log("Serialized Response:", serialized);
 
@@ -74,8 +90,17 @@ async function handleUserRoute(req, res) {
             contentType
         );
 
+        res.setHeader(
+            "Content-Encoding",
+            "gzip"
+        );
 
-        res.end(serialized);
+        res.setHeader(
+            "Content-Length",
+            compressedResponse.length
+        );
+
+        res.end(compressedResponse);
 
     }
 
