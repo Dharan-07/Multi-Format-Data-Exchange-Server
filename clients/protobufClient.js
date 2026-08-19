@@ -1,6 +1,7 @@
 const http = require("http");
 const { serialize, deserialize } = require("../serializers/protobuf");
 const readline = require("readline");
+const { compress, decompress } = require("../utils/compression");
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -28,14 +29,20 @@ async function sendUser() {
             // --------------------------------
 
             const buffer = serialize(user);
+            const compressedBuffer = compress(buffer);
 
 
-            console.log("\nBuffer:");
+            console.log("Original Buffer:");
             console.log(buffer);
 
-
-            console.log("\nBuffer length:");
+            console.log("Original Size:");
             console.log(buffer.length);
+
+            console.log("\nCompressed Buffer:");
+            console.log(compressedBuffer);
+
+            console.log("Compressed Size:");
+            console.log(compressedBuffer.length);
 
 
             console.log("\nBuffer as array:");
@@ -75,8 +82,8 @@ async function sendUser() {
                     "Content-Type":
                         "application/x-protobuf",
 
-                    "Content-Length":
-                        buffer.length
+                    "Content-Encoding": "gzip",
+                    "Content-Length": compressedBuffer.length
                 }
             };
 
@@ -91,34 +98,58 @@ async function sendUser() {
 
                     });
 
-
                     res.on("end", () => {
 
                         const responseBuffer =
                             Buffer.concat(chunks);
 
+                        console.log("\nServer status:");
+                        console.log(res.statusCode);
+
+                        // Server returned an error
+                        if (res.statusCode >= 400) {
+
+                            console.log(
+                                "\nServer Error:"
+                            );
+
+                            console.log(
+                                responseBuffer.toString()
+                            );
+
+                            rl.close();
+
+                            return;
+                        }
+
+                        // Successful response
+                        let responseData =
+                            responseBuffer;
+
+                        if (
+                            res.headers["content-encoding"] === "gzip"
+                        ) {
+
+                            responseData =
+                                decompress(responseBuffer);
+                        }
 
                         console.log(
                             "\nServer response:"
                         );
 
-                        console.log(responseBuffer);
-
-
-                        // --------------------------------
-                        // Deserialize response
-                        // --------------------------------
+                        console.log(responseData);
 
                         const decoded =
-                            deserialize(responseBuffer);
-
+                            deserialize(responseData);
 
                         console.log(
                             "\nDecoded response:"
                         );
-                        
+
                         console.log(decoded);
                         rl.close();
+
                     });
                 });
             req.on("error", (error) => {
@@ -131,7 +162,7 @@ async function sendUser() {
                 rl.close();
             });
             // Send binary buffer
-            req.write(buffer);
+            req.write(compressedBuffer);
 
             req.end();
         });
