@@ -6,6 +6,8 @@ const { saveUser } = require("../services/userService");
 
 const { compress, decompress } = require("../utils/compression");
 
+const { logRequest } = require("../utils/logger");
+
 
 async function handleUserRoute(req, res) {
 
@@ -102,6 +104,13 @@ async function handleUserRoute(req, res) {
 
         res.end(compressedResponse);
 
+        logRequest({
+            method: req.method,
+            url: req.url,
+            contentType,
+            status: res.statusCode
+        });
+
     }
 
     catch (err) {
@@ -121,6 +130,14 @@ async function handleUserRoute(req, res) {
                 message: err.message
             })
         );
+
+        logRequest({
+            method: req.method,
+            url: req.url,
+            contentType: req.headers["content-type"],
+            status: res.statusCode,
+            error: err.message
+        });
 
     }
 

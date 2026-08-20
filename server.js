@@ -1,6 +1,7 @@
 const http = require("http");
 
 const handleUserRoute = require("./routes/userRoute");
+const handleAnalyzeLogs = require("./routes/analyzeLogsRoute");
 
 const port = 4000;
 
@@ -33,6 +34,17 @@ const server = http.createServer((req, res) => {
     ) {
 
         return handleUserRoute(req, res);
+
+    }
+
+
+    // Analyze logs route
+    if (
+        req.method === "POST" &&
+        req.url === "/analyze-logs"
+    ) {
+
+        return handleAnalyzeLogs(req, res);
 
     }
 
