@@ -10,6 +10,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "avsc": "^5.7.9",
     "protobufjs": "^8.7.1"
   }
 }
