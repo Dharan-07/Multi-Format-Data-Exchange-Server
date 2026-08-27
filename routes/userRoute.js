@@ -19,6 +19,16 @@ async function handleUserRoute(req, res) {
 
         const contentType = req.headers["content-type"];
         const contentEncoding = req.headers["content-encoding"];
+        const acceptEncoding = req.headers["accept-encoding"];
+
+        if (
+            contentEncoding &&
+            contentEncoding !== "gzip"
+        ) {
+            throw new Error(
+                `Unsupported Content-Encoding: ${contentEncoding}`
+            );
+        }
 
         console.log("\nContent-Type:", contentType);
 
@@ -75,11 +85,9 @@ async function handleUserRoute(req, res) {
 
         const serialized = serializer.serialize(user);
 
-        const compressedResponse = compress(serialized);
-
-
         console.log("Serialized Response:", serialized);
 
+        const supportsGzip = acceptEncoding && acceptEncoding.includes("gzip");
 
         // --------------------------------
         // 7. Send response
@@ -92,17 +100,30 @@ async function handleUserRoute(req, res) {
             contentType
         );
 
-        res.setHeader(
-            "Content-Encoding",
-            "gzip"
-        );
+        if (supportsGzip) {
 
-        res.setHeader(
-            "Content-Length",
-            compressedResponse.length
-        );
+            const compressedResponse = compress(serialized);
 
-        res.end(compressedResponse);
+            res.setHeader(
+                "Content-Encoding",
+                "gzip"
+            );
+
+            res.setHeader(
+                "Content-Length",
+                compressedResponse.length
+            );
+
+            res.end(compressedResponse);
+
+        } else {
+            res.setHeader(
+                "Content-Length",
+                serialized.length
+            );
+
+            res.end(serialized);
+        }
 
         logRequest({
             method: req.method,

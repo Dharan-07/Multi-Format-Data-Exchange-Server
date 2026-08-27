@@ -68,6 +68,8 @@ rl.question("Enter name: ", (name) => {
                 "Content-Encoding":
                     "gzip",
 
+                "Accept-Encoding": "gzip",
+
                 "Content-Length":
                     compressedBuffer.length
 
@@ -96,8 +98,23 @@ rl.question("Enter name: ", (name) => {
 
                     console.log(res.statusCode);
 
+                    if (res.statusCode >= 400) {
+
+                        console.log(
+                            "\nServer Error:"
+                        );
+
+                        console.log(
+                            responseBuffer.toString()
+                        );
+
+                        rl.close();
+
+                        return;
+                    }
+
                     console.log(
-                        "\nCompressed Server Response:"
+                        "\nServer Response:"
                     );
 
                     console.log(responseBuffer);
@@ -105,24 +122,32 @@ rl.question("Enter name: ", (name) => {
                     // --------------------------------
                     // 4. Decompress response
                     // --------------------------------
-                    const decompressedResponse =
-                        decompress(responseBuffer);
+                    let responseData = responseBuffer;
+
+                    if (res.headers["content-encoding"] === "gzip") {
+                        responseData = decompress(responseBuffer);
+                    }
+
 
                     console.log(
-                        "\nDecompressed Response:"
+                        "\nResponse Data"
                     );
 
                     console.log(
-                        decompressedResponse
+                        responseData
                     );
 
                     // --------------------------------
                     // 5. Deserialize
                     // --------------------------------
-                    const responseUser =
-                        deserialize(
-                            decompressedResponse
-                        );
+                    let responseUser;
+                    try {
+                        responseUser = deserialize(responseData);
+                    } catch (err) {
+                        console.log("\nFailed to decode response:", err.message);
+                        rl.close();
+                        return;
+                    }
 
                     console.log(
                         "\nDecoded response:"

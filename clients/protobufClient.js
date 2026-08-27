@@ -83,6 +83,9 @@ async function sendUser() {
                         "application/x-protobuf",
 
                     "Content-Encoding": "gzip",
+
+                    "Accept-Encoding": "gzip",
+
                     "Content-Length": compressedBuffer.length
                 }
             };
@@ -140,14 +143,20 @@ async function sendUser() {
 
                         console.log(responseData);
 
-                        const decoded =
-                            deserialize(responseData);
+                        let responseUser;
+                        try {
+                            responseUser = deserialize(responseData);
+                        } catch (err) {
+                            console.log("\nFailed to decode response:", err.message);
+                            rl.close();
+                            return;
+                        }
 
                         console.log(
                             "\nDecoded response:"
                         );
 
-                        console.log(decoded);
+                        console.log(responseUser);
                         rl.close();
 
                     });
