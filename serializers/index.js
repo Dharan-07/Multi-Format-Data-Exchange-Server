@@ -2,6 +2,7 @@ const jsonSerializer = require("./json");
 const customSerializer = require("./custom");
 const protobufSerializer = require("./protobuf");
 const avroSerializer = require("./avro");
+const appError = require("../utils/appError")
 
 
 const serializers = {
@@ -23,8 +24,9 @@ function getSerializer(contentType) {
 
     if (!serializer) {
 
-        throw new Error(
-            `Unsupported Content-Type: ${contentType}`
+        throw new appError(
+            `Unsupported Content-Type: ${contentType}`,
+            415
         );
 
     }

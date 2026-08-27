@@ -8,6 +8,10 @@ const { compress, decompress } = require("../utils/compression");
 
 const { logRequest } = require("../utils/logger");
 
+const appError = require("../utils/appError");
+
+const validateUser = require("../utils/validateUser");
+
 
 async function handleUserRoute(req, res) {
 
@@ -25,8 +29,9 @@ async function handleUserRoute(req, res) {
             contentEncoding &&
             contentEncoding !== "gzip"
         ) {
-            throw new Error(
-                `Unsupported Content-Encoding: ${contentEncoding}`
+            throw new appError(
+                `Unsupported Content-Encoding: ${contentEncoding}`,
+                415
             );
         }
 
@@ -71,6 +76,7 @@ async function handleUserRoute(req, res) {
 
         console.log("Deserialized User:", user);
 
+        validateUser(user);
 
         // --------------------------------
         // 5. Business logic
@@ -138,7 +144,7 @@ async function handleUserRoute(req, res) {
 
         console.log(err);
 
-        res.statusCode = 400;
+        res.statusCode = err.statusCode || 400;
 
         res.setHeader(
             "Content-Type",
